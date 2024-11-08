@@ -157,6 +157,30 @@ check_openshift_networks() {
   print_check "Service Network: $SERVICE_NETWORK"
 }
 
+# Function to check if the compliance operator is installed in OpenShift
+check_compliance_operator_installed() {
+  local COMPLIANCE_OPERATOR
+  COMPLIANCE_OPERATOR=$(oc get csv -n openshift-compliance --no-headers | grep compliance-operator)
+
+  if [[ -n "$COMPLIANCE_OPERATOR" ]]; then
+    print_pass "Compliance Operator is installed"
+  else
+    print_fail "Compliance Operator is not installed"
+  fi
+}
+
+# Function to check CSI driver provider
+check_csi_driver_provider() {
+  local CSI_DRIVER
+  CSI_DRIVER=$(oc get csidrivers --no-headers | awk '{print $1}')
+
+  if [[ -n "$CSI_DRIVER" ]]; then
+    print_check "CSI Driver Provider(s) found: $CSI_DRIVER"
+  else
+    print_fail "No CSI Driver Provider found"
+  fi
+}
+
 # Call the function to check etcd encryption
 check_etcd_encryption
 
@@ -183,3 +207,9 @@ check_openshift_cni
 
 # Call the function to check OpenShift cluster network and service network
 check_openshift_networks
+
+# Call the function to check if the compliance operator is installed
+check_compliance_operator_installed
+
+# Call the function to check CSI driver provider
+check_csi_driver_provider
