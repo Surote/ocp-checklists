@@ -181,6 +181,49 @@ check_csi_driver_provider() {
   fi
 }
 
+# Function to check if OAuth configuration has at least htpasswd
+check_oauth_htpasswd() {
+  local OAUTH_PROVIDERS
+  OAUTH_PROVIDERS=$(oc get oauth cluster -o jsonpath='{.spec.identityProviders[*].name}')
+
+  if echo "$OAUTH_PROVIDERS" | grep -q "htpasswd"; then
+    print_pass "OAuth configuration includes htpasswd"
+  else
+    print_fail "OAuth configuration does not include htpasswd"
+  fi
+}
+
+# Function to check if Alertmanager configuration exists in OpenShift
+check_alertmanager_configuration() {
+  local ALERTMANAGER_CONFIG
+  ALERTMANAGER_CONFIG=$(oc get secret -n openshift-monitoring alertmanager-main -o jsonpath='{.data.alertmanager\.yaml}')
+
+  if [[ -n "$ALERTMANAGER_CONFIG" ]]; then
+    print_pass "Alertmanager configuration exists"
+  else
+    print_fail "Alertmanager configuration does not exist"
+  fi
+}
+
+# Function to check if any node has CPU or memory requests exceeding 70%
+check_node_resource_requests() {
+  local NODES
+  NODES=$(oc get nodes --no-headers -o custom-columns=NAME:.metadata.name)
+
+  for node in $NODES; do
+    local ALLOCATED_RESOURCES
+    ALLOCATED_RESOURCES=$(oc describe node $node | awk '/Allocated resources/,/Events/')
+
+    local CPU_REQUESTS
+    local MEMORY_REQUESTS
+    CPU_REQUESTS=$(echo "$ALLOCATED_RESOURCES" | grep "cpu" | awk '{print $2, $3}')
+    MEMORY_REQUESTS=$(echo "$ALLOCATED_RESOURCES" | grep "memory" | awk '{print $2, $3}')
+
+    print_check "$node has CPU requests at $CPU_REQUESTS"
+    print_check "$node has memory requests at $MEMORY_REQUESTS"
+  done
+}
+
 # Call the function to check etcd encryption
 check_etcd_encryption
 
@@ -213,3 +256,12 @@ check_compliance_operator_installed
 
 # Call the function to check CSI driver provider
 check_csi_driver_provider
+
+# Call the function to check OAuth configuration for htpasswd
+check_oauth_htpasswd
+
+# Call the function to check Alertmanager configuration
+check_alertmanager_configuration
+
+# Call the function to check node resource requests
+check_node_resource_requests
