@@ -175,7 +175,10 @@ check_csi_driver_provider() {
   CSI_DRIVER=$(oc get csidrivers --no-headers | awk '{print $1}')
 
   if [[ -n "$CSI_DRIVER" ]]; then
-    print_check "CSI Driver Provider(s) found: $CSI_DRIVER"
+    echo "CSI Driver Provider(s) found:"
+    for driver in $CSI_DRIVER; do
+      print_check "CSI Driver: $driver"
+    done
   else
     print_fail "No CSI Driver Provider found"
   fi
@@ -224,20 +227,73 @@ check_node_resource_requests() {
   done
 }
 
+# Function to check the number of router pods in OpenShift
+check_router_pods() {
+  local ROUTER_PODS
+  ROUTER_PODS=$(oc get pods -n openshift-ingress --no-headers | grep router | wc -l)
+
+  if [[ "$ROUTER_PODS" -gt 0 ]]; then
+    print_pass "Number of router pods: $ROUTER_PODS"
+  else
+    print_fail "No router pods found"
+  fi
+}
+
+# Function to check if any node is tainted
+check_node_taints() {
+  local TAINTED_NODES
+  TAINTED_NODES=$(oc get nodes --no-headers | awk '{print $1}' | xargs -I {} oc describe node {} | grep -B 1 "Taints: " | grep "Name:" | awk '{print $2}')
+
+  if [[ -n "$TAINTED_NODES" ]]; then
+    for node in $TAINTED_NODES; do
+      print_check "Node $node is tainted"
+    done
+  else
+    print_check "No nodes are tainted"
+  fi
+}
+
+# Function to check if router uses self-signed certificates
+check_router_certificate() {
+  local ROUTER_CERT
+  ROUTER_CERT=$(oc get ingresscontroller default -n openshift-ingress-operator -o jsonpath='{.spec.defaultCertificate}')
+
+  if [[ -z "$ROUTER_CERT" ]]; then
+    print_fail "Router uses self-signed certificate"
+  else
+    print_pass "Router is using a custom certificate"
+  fi
+}
+
+# Function to list all ingresscontrollers
+list_all_ingresscontrollers() {
+  local INGRESSCONTROLLERS
+  INGRESSCONTROLLERS=$(oc get ingresscontroller -n openshift-ingress-operator --no-headers | awk '{print $1}')
+
+  if [[ -n "$INGRESSCONTROLLERS" ]]; then
+    echo "IngressControllers found:"
+    for ingress in $INGRESSCONTROLLERS; do
+      print_check "IngressController: $ingress"
+    done
+  else
+    print_fail "No IngressControllers found"
+  fi
+}
+
 # Call the function to check etcd encryption
 check_etcd_encryption
 
 # Call the function to check cluster-monitoring-config
 check_cluster_monitoring_config
 
-# Call the function to check node readiness
-check_node_readiness
-
 # Call the function to check if all pods in openshift-monitoring are running
 check_pods_running
 
+# Call the function to check node readiness
+check_node_readiness
+
 # Call the function to check pods not running in the cluster
-check_pods_not_running_with_namespace
+#check_pods_not_running_with_namespace
 
 # Call the function to check if all MachineConfigPools are updated
 check_mcp_updated
@@ -264,4 +320,15 @@ check_oauth_htpasswd
 check_alertmanager_configuration
 
 # Call the function to check node resource requests
-check_node_resource_requests
+#check_node_resource_requests
+
+# Call the function to check the number of router pods
+check_router_pods
+
+check_node_taints
+
+# Call the function to check router certificate
+check_router_certificate
+
+# Call the function to list all ingresscontrollers
+list_all_ingresscontrollers
