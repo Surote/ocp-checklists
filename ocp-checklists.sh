@@ -7,7 +7,7 @@
 print_pass() {
   local topic=$1
   if [[ "$OSTYPE" == "darwin"* ]]; then
-    echo -e "\033[0;32mPASS: $topic\033[0m"
+    echo "\033[0;32mPASS: $topic\033[0m"
   else
     echo -e "\e[32mPASS: $topic\e[0m"
   fi
@@ -17,7 +17,7 @@ print_pass() {
 print_fail() {
   local topic=$1
   if [[ "$OSTYPE" == "darwin"* ]]; then
-    echo -e "\033[0;31mFAILED: $topic\033[0m"
+    echo "\033[0;31mFAILED: $topic\033[0m"
   else
     echo -e "\e[31mFAILED: $topic\e[0m"
   fi
@@ -27,7 +27,7 @@ print_fail() {
 print_check() {
   local topic=$1
   if [[ "$OSTYPE" == "darwin"* ]]; then
-    echo -e "\033[0;33mCHECK: $topic\033[0m"
+    echo "\033[0;33mCHECK: $topic\033[0m"
   else
     echo -e "\e[33mCHECK: $topic\e[0m"
   fi
@@ -255,13 +255,22 @@ check_node_taints() {
 
 # Function to check if router uses self-signed certificates
 check_router_certificate() {
-  local ROUTER_CERT
-  ROUTER_CERT=$(oc get ingresscontroller default -n openshift-ingress-operator -o jsonpath='{.spec.defaultCertificate}')
+  local INGRESSCONTROLLERS
+  INGRESSCONTROLLERS=$(oc get ingresscontroller -n openshift-ingress-operator --no-headers | awk '{print $1}')
 
-  if [[ -z "$ROUTER_CERT" ]]; then
-    print_fail "Router uses self-signed certificate"
+  if [[ -n "$INGRESSCONTROLLERS" ]]; then
+    for ingress in $INGRESSCONTROLLERS; do
+      local ROUTER_CERT
+      ROUTER_CERT=$(oc get ingresscontroller $ingress -n openshift-ingress-operator -o jsonpath='{.spec.defaultCertificate}')
+
+      if [[ -z "$ROUTER_CERT" ]]; then
+        print_fail "IngressController $ingress uses self-signed certificate"
+      else
+        print_pass "IngressController $ingress is using a custom certificate"
+      fi
+    done
   else
-    print_pass "Router is using a custom certificate"
+    print_fail "No IngressControllers found"
   fi
 }
 
@@ -277,6 +286,18 @@ list_all_ingresscontrollers() {
     done
   else
     print_fail "No IngressControllers found"
+  fi
+}
+
+# Function to check if the OpenShift Image Registry is deployed
+check_image_registry_deployed() {
+  local IMAGE_REGISTRY
+  IMAGE_REGISTRY=$(oc get deployment image-registry -n openshift-image-registry --no-headers)
+
+  if [[ -n "$IMAGE_REGISTRY" ]]; then
+    print_pass "OpenShift Image Registry is deployed"
+  else
+    print_fail "OpenShift Image Registry is not deployed"
   fi
 }
 
@@ -332,3 +353,6 @@ check_router_certificate
 
 # Call the function to list all ingresscontrollers
 list_all_ingresscontrollers
+
+# Call the function to check if the OpenShift Image Registry is deployed
+check_image_registry_deployed
