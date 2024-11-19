@@ -45,6 +45,9 @@ oc get imagetag -A &>$DST/imagetag.out
 oc get imagetag -A -oyaml &>$DST/imagetag.out.yaml
 oc adm top nodes  &>$DST/top_nodes.out
 for NODE in `oc get node --no-headers|awk '{print$1}'`; do echo $NODE; oc debug node/$NODE -- ip a; echo "=====";done  &>$DST/node_ips.out
+for NODE in `oc get node --no-headers|awk '{print$1}'`; do echo $NODE; oc debug node/$NODE -- ip route; echo "=====";done  &>$DST/node_ip_route.out
+for NODE in `oc get node --no-headers|awk '{print$1}'`; do echo $NODE; oc debug node/$NODE -- sysctl -a; echo "=====";done  &>$DST/node_sysctl.out
+for NODE in `oc get node --no-headers|awk '{print$1}'`; do echo $NODE; oc debug node/$NODE -- ip link -d; echo "=====";done  &>$DST/node_ip_link.out
 for NODE in `oc get node --no-headers|awk '{print$1}'`; do echo $NODE; oc debug node/$NODE -- chroot /host cat /etc/resolv.conf; echo "=====";done  &>$DST/node_resolv.out
 for NODE in `oc get node --no-headers|awk '{print$1}'`; do echo $NODE; oc debug node/$NODE -- chroot /host /usr/bin/chronyc -m sources tracking; echo "=====";done  &>$DST/node_times.out
 oc get kubeletconfig -A  &>$DST/kubeletconfig.out
