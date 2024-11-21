@@ -48,6 +48,7 @@ for NODE in `oc get node --no-headers|awk '{print$1}'`; do echo $NODE; oc debug 
 for NODE in `oc get node --no-headers|awk '{print$1}'`; do echo $NODE; oc debug node/$NODE -- chroot /host ip route; echo "=====";done  &>$DST/node_ip_route.out
 for NODE in `oc get node --no-headers|awk '{print$1}'`; do echo $NODE; oc debug node/$NODE -- chroot /host sysctl -a; echo "=====";done  &>$DST/node_sysctl.out
 for NODE in `oc get node --no-headers|awk '{print$1}'`; do echo $NODE; oc debug node/$NODE -- chroot /host ip -d link ; echo "=====";done  &>$DST/node_ip_link.out
+for NODE in `oc get node --no-headers|awk '{print$1}'`; do echo $NODE; oc debug node/$NODE -- chroot /host netstat -s ; echo "=====";done  &>$DST/node_netstat_s.out
 for NODE in `oc get node --no-headers|awk '{print$1}'`; do echo $NODE; oc debug node/$NODE -- chroot /host cat /etc/resolv.conf; echo "=====";done  &>$DST/node_resolv.out
 for NODE in `oc get node --no-headers|awk '{print$1}'`; do echo $NODE; oc debug node/$NODE -- chroot /host /usr/bin/chronyc -m sources tracking; echo "=====";done  &>$DST/node_times.out
 oc get kubeletconfig -A  &>$DST/kubeletconfig.out
@@ -284,7 +285,7 @@ oc get secret alertmanager-user-workload-generated -n openshift-user-workload-mo
 oc get cm thanos-ruler-user-workload-rulefiles-0 -n openshift-user-workload-monitoring -o yaml  &> $DST/thanosrulefile-user-workload-monitoring.out.yaml
 ##
 oc get apirequestcount &> $DST/api-requests-count.out.yaml
-for NODE_NAME in $(oc get nodes -o jsonpath='{.items[*].metadata.name}'); do oc get --raw /api/v1/nodes/$NODE_NAME/proxy/configz | jq ;done &> $DST/node-kubeletconfig.out.json
+for NODE_NAME in $(oc get nodes -o jsonpath='{.items[*].metadata.name}'); do oc get --raw /api/v1/nodes/$NODE_NAME/proxy/configz ;done &> $DST/node-kubeletconfig.out.json
 oc get rolebinding -A -o custom-columns=NAME:.metadata.name,KIND:.subjects[*].kind,SUBJECTNAME:.subjects[*].name,ROLEKIND:.roleRef.kind,ROLENAME:.roleRef.name &> $DST/rolebinding-custom.out
 
 echo "Step 15/16 -- Virtualization"
