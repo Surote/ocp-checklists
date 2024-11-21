@@ -53,6 +53,7 @@ for NODE in `oc get node --no-headers|awk '{print$1}'`; do echo $NODE; oc debug 
 for NODE in `oc get node --no-headers|awk '{print$1}'`; do echo $NODE; oc debug node/$NODE -- chroot /host /usr/bin/chronyc -m sources tracking; echo "=====";done  &>$DST/node_times.out
 oc get kubeletconfig -A  &>$DST/kubeletconfig.out
 oc get kubeletconfig -A -o yaml   &>$DST/kubeletconfig.out.yaml
+oc get profile -A -o yaml &>$DST/tuned_profile.out.yaml
 oc get config cluster -A  &>$DST/config.out
 oc get config cluster -A -o yaml  &>$DST/config.out.yaml
 oc get clusterversions.config.openshift.io  &>$DST/clusterversion.out
