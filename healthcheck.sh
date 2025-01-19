@@ -25,6 +25,7 @@ echo "        -- This may take a while..."
 oc version  &>$DST/oc-version.out
 oc cluster-info dump &>$DST/cluster-info-dump.out
 oc get all -A -o wide  &>$DST/all.out
+oc status -A --suggest &>$DST/status-suggest.out
 oc get imagecontentsourcepolicy -A -o yaml &>$DST/imagecontentsourcepolicy.out.yaml
 oc get machine -A  &>$DST/machine.out
 oc get machine -A -o yaml  &>$DST/machine.out.yaml
@@ -277,13 +278,13 @@ oc get alertmanagerconfig -A -o yaml &> $DST/alertmanager-config.out.yaml
 oc get installplan -A &> $DST/installplan.out
 oc get installplan -A -o yaml &> $DST/installplan.out.yaml
 ## optional for user-workload
-oc get secret thanos-ruler-alertmanagers-config -n openshift-user-workload-monitoring -o jsonpath='{.data.alertmanagers\.yaml}' | base64 -d &> $DST/thanos-ruler-alertmanager-dst.out 
+#oc get secret thanos-ruler-alertmanagers-config -n openshift-user-workload-monitoring -o jsonpath='{.data.alertmanagers\.yaml}' | base64 -d &> $DST/thanos-ruler-alertmanager-dst.out 
 ##
-oc get secret -n openshift-monitoring alertmanager-main -o jsonpath='{.data.alertmanager\.yaml}' | base64 -d &> $DST/cluster-alertmanager.out
-oc get secret alertmanager-main-generated -n openshift-monitoring -o jsonpath='{.data.alertmanager\.yaml\.gz}' | base64 -d | gunzip $DST/cluster-alertmanager-generated.out
+#oc get secret -n openshift-monitoring alertmanager-main -o jsonpath='{.data.alertmanager\.yaml}' | base64 -d &> $DST/cluster-alertmanager.out
+#oc get secret alertmanager-main-generated -n openshift-monitoring -o jsonpath='{.data.alertmanager\.yaml\.gz}' | base64 -d | gunzip $DST/cluster-alertmanager-generated.out
 ## optional for user-workload
-oc get secret alertmanager-user-workload-generated -n openshift-user-workload-monitoring -o jsonpath='{.data.alertmanager\.yaml\.gz}' | base64 -d | gunzip &> $DST/generated-alertmanager.out.yaml
-oc get cm thanos-ruler-user-workload-rulefiles-0 -n openshift-user-workload-monitoring -o yaml  &> $DST/thanosrulefile-user-workload-monitoring.out.yaml
+#oc get secret alertmanager-user-workload-generated -n openshift-user-workload-monitoring -o jsonpath='{.data.alertmanager\.yaml\.gz}' | base64 -d | gunzip &> $DST/generated-alertmanager.out.yaml
+#oc get cm thanos-ruler-user-workload-rulefiles-0 -n openshift-user-workload-monitoring -o yaml  &> $DST/thanosrulefile-user-workload-monitoring.out.yaml
 ##
 oc get apirequestcount &> $DST/api-requests-count.out.yaml
 for NODE_NAME in $(oc get nodes -o jsonpath='{.items[*].metadata.name}'); do oc get --raw /api/v1/nodes/$NODE_NAME/proxy/configz ;done &> $DST/node-kubeletconfig.out.json
