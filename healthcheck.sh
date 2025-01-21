@@ -188,6 +188,9 @@ oc get configmaps -n openshift-config -o yaml  &>$DST/configmaps.logging.out.yam
 oc get builds -A  &>$DST/builds.out
 oc get deployment -A  &>$DST/deployment.out
 oc get deployment -A -o yaml  &>$DST/deployment.out.yaml
+# deploymentconfig is deprecated
+oc get deploymentconfig -A  &>$DST/deploymentconfig.out
+oc get deploymentconfig -A -o yaml  &>$DST/deploymentconfig.out.yaml
 oc get images -A  &>$DST/images.out
 oc get imagestreams -A  &>$DST/is.out
 oc get limits -A  &>$DST/limits.out
