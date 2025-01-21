@@ -83,6 +83,7 @@ oc get network.operator cluster -o yaml &>$DST/network-operator.out.yaml
 oc get networkpolicies -A   &>$DST/networkpolicies.out
 oc get networkpolicies -A -o yaml  &>$DST/networkpolicies.out.yaml
 oc get hostsubnet   &>$DST/hostsubnet.out
+oc get netnamespace &>$DST/netnamespace.out
 oc get hostsubnet -o yaml &>$DST/hostsubnet.out.yaml
 oc get egressip &> $DST/egressip.out
 oc get egressip -A -o yaml &>$DST/egressip.out.yaml
