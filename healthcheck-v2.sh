@@ -119,6 +119,7 @@ if has_resource "machine.openshift.io"; then
   collect machine machine -A
   collect machineautoscaler machineautoscaler -A
   collect machineset machineset -A
+  collect machinehealthcheck machinehealthcheck -A
 fi
 has_resource machineconfigpools && collect machineconfigpool machineconfigpool
 has_resource machineconfigs && collect machineconfigs machineconfigs
@@ -136,6 +137,14 @@ collect clusterversion clusterversions.config.openshift.io
 run featuregate.out.yaml oc get featuregate -o yaml
 run statefulset.out.yaml oc get statefulset -A -o yaml
 run scheduler.out.yaml oc get scheduler cluster -o yaml
+run apiserver-config.out.yaml oc get apiserver cluster -o yaml
+run node-config.out.yaml oc get node.config cluster -o yaml
+run dns-config.out.yaml oc get dns cluster -o yaml
+run console-config.out.yaml oc get console cluster -o yaml
+run operatorhub.out.yaml oc get operatorhub cluster -o yaml
+run build-config.out.yaml oc get build.config cluster -o yaml
+run project-config.out.yaml oc get project.config cluster -o yaml
+run csr.out oc get csr
 run secrets.out oc get secrets -A
 collect crd customresourcedefinitions
 
@@ -222,12 +231,17 @@ collect subscriptions subscriptions.operators.coreos.com -A
 run operatorgroups.out oc get operatorgroups.operators.coreos.com -A
 run operatorgroups.out.yaml oc get operatorgroups.operators.coreos.com -A -o yaml
 collect installplan installplan -A
+collect catalogsource catalogsource -n openshift-marketplace
 
 # ---------- Step 8: cluster resources, API & autoscaling ----------
 log "Step 8/16 -- Gathering cluster resource, API & autoscaling information"
 run apiservices.out oc get apiservices.apiregistration.k8s.io
 run api-versions.out oc api-versions
 run api-requests-count.out oc get apirequestcount
+# APIs marked for removal that still receive traffic - upgrade blockers
+run api-requests-deprecated.out oc get apirequestcount \
+  -o custom-columns=NAME:.metadata.name,REMOVEDINRELEASE:.status.removedInRelease,LAST24H:.status.requestCount \
+  --sort-by=.status.removedInRelease
 collect clusterresourcequotas clusterresourcequotas.quota.openshift.io -A
 run appliedclusterresourcequotas.out oc get appliedclusterresourcequotas.quota.openshift.io -A
 has_resource clusterautoscalers && collect clusterautoscalers clusterautoscalers.autoscaling.openshift.io
@@ -324,6 +338,13 @@ run templates.out oc get templates -A
 run top_pods.out oc adm top pods -A
 collect tuned tuned -A
 run validatingwebhookconfigurations.out oc get validatingwebhookconfigurations
+run mutatingwebhookconfigurations.out oc get mutatingwebhookconfigurations
+collect daemonset daemonset -A
+collect cronjob cronjob -A
+run job.out oc get job -A
+run priorityclass.out oc get priorityclass
+run pods_failed.out oc get pods -A --field-selector=status.phase=Failed
+run pods_pending.out oc get pods -A --field-selector=status.phase=Pending
 
 # ---------- Step 13: etcd ----------
 log "Step 13/16 -- Examining etcd (read-only etcdctl queries)"
